@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "hack-vmtranslator"
+version = "0.1.0"
+description = "VM language translator for the Hack computer (Nand2Tetris)"
+authors = ["Zachary Eller <37415056+zacharyeller13@users.noreply.github.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "hack_vmtranslator"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
