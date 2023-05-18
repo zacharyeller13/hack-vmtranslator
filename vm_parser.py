@@ -32,7 +32,7 @@ def parse_file(file: str) -> list[str]:
 
 
 # TODO: Arithemtic/Logic commands
-# add, sub, neg, eq, get, lt, and, or, not
+# add, sub, neg, eq, gt, lt, and, or, not
 
 # TODO: Memory access commands
 # pop, push
