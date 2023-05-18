@@ -5,6 +5,13 @@ Constants for both VM language and ASM language
 COMMENT = "//"
 VAR_START = "@"
 
+# Base Address Pointers - may not be necessary but will keep til later
+SP = 0
+LCL = 1
+ARG = 2
+THIS = 3
+THAT = 4
+
 # Arithmetic/Logical Commands
 # Dictionary containing list of ASM instructions to complete each VM arithmetic/logic command
 # Labels like "(IF_EQ)" will get appended with a number later on when there is more than 1
