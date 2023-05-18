@@ -29,3 +29,16 @@ def parse_file(file: str) -> list[str]:
         ]
 
         return lines
+
+
+# TODO: Arithemtic/Logic commands
+# add, sub, neg, eq, get, lt, and, or, not
+
+# TODO: Memory access commands
+# pop, push
+
+# TODO: Branching Commands
+# label, goto, if-goto
+
+# TODO: Function commands
+# function, call, return
