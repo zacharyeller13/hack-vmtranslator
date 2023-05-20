@@ -14,7 +14,7 @@ valid_parsed_commands = [
     Command("push constant 17"),
     Command("push local 2"),
     Command("add"),
-    Command("pop argument 1")
+    Command("pop argument 1"),
 ]
 
 
@@ -78,3 +78,58 @@ def test_command_arg2_return_raises_error():
 
 def test_parse_commands():
     assert parse_commands(valid_parsed_file) == valid_parsed_commands
+
+
+def test_translate_arithmetic_no_label():
+    command = Command("add")
+    command.translate()
+    assert command.translation == ["@SP", "AM=M-1", "D=M", "A=A-1", "M=D+M"]
+
+
+def test_translate_arithmetic_label():
+    command = Command("eq")
+    command.translate()
+    assert command.translation == [
+        "@SP",
+        "AM=M-1",
+        "D=M",
+        "A=A-1",
+        "D=M-D",
+        "@IF_EQ0",
+        "D;JEQ",
+        "@SP",
+        "A=M-1",
+        "M=0",
+        "@END_IF_EQ0",
+        "0;JMP",
+        "(IF_EQ0)",
+        "@SP",
+        "A=M-1",
+        "M=-1",
+        "(END_IF_EQ0)",
+    ]
+
+
+def test_translate_arithmetic_multiple_labels():
+    command = Command("eq")
+    Command.label_count = 5
+    command.translate()
+    assert command.translation == [
+        "@SP",
+        "AM=M-1",
+        "D=M",
+        "A=A-1",
+        "D=M-D",
+        "@IF_EQ5",
+        "D;JEQ",
+        "@SP",
+        "A=M-1",
+        "M=0",
+        "@END_IF_EQ5",
+        "0;JMP",
+        "(IF_EQ5)",
+        "@SP",
+        "A=M-1",
+        "M=-1",
+        "(END_IF_EQ5)",
+    ]

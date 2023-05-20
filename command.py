@@ -2,13 +2,15 @@
 Command module
 """
 
-from constants import CType
+from constants import ARITHMETIC_COMMANDS, CType
 
 class Command:
     """
     Holds a VM command with its full command, type, translation, and parts
 
     Attributes:
+        `label_count` (int): class attribute that counts number of commands used with labels. To help create
+            unique labels for each command.
         `command` (str): the full command
         `c_type` (CType): the type of the command.  Is one of:
             - arithmetic
@@ -23,6 +25,8 @@ class Command:
         `translation` (list[str]): the full translation of the command in multiple lines of
             ASM commands
     """
+
+    label_count: int = 0
 
     def __init__(self, command: str) -> None:
         self.command: str = command
@@ -71,4 +75,13 @@ class Command:
         Translates a command from its VM code to its assembly code
         """
 
+        if self.c_type == CType.ARITHMETIC:
+            translation = ARITHMETIC_COMMANDS[self.arg1]
+            
+            if self.arg1 in ("eq", "gt", "lt"):
+                self.translation = [line.format(Command.label_count) for line in translation]
+                Command.label_count += 1
+            else:
+                self.translation = translation
+            return
         raise NotImplementedError
