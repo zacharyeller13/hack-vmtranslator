@@ -8,10 +8,12 @@ from enum import StrEnum, auto
 COMMENT = "//"
 VAR_START = "@"
 
+
 class CType(StrEnum):
     """
     Command type constants
     """
+
     ARITHMETIC = auto()
     PUSH = auto()
     POP = auto()
@@ -21,6 +23,7 @@ class CType(StrEnum):
     FUNCTION = auto()
     RETURN = auto()
     CALL = auto()
+
 
 # Base Address Pointers - may not be necessary but will keep til later
 # Additionally, Temp is RAM[5]-RAM[12] and static is RAM[16]-RAM[255]

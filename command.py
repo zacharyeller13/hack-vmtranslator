@@ -4,13 +4,14 @@ Command module
 
 from constants import ARITHMETIC_COMMANDS, CType
 
+
 class Command:
     """
     Holds a VM command with its full command, type, translation, and parts
 
     Attributes:
-        `label_count` (int): class attribute that counts number of commands used with labels. To help create
-            unique labels for each command.
+        `label_count` (int): class attribute that counts number of commands used with labels. 
+            To help create unique labels for each command.
         `command` (str): the full command
         `c_type` (CType): the type of the command.  Is one of:
             - arithmetic
@@ -45,7 +46,7 @@ class Command:
     def arg1(self) -> str:
         """
         Returns the 1st argument to the command.  If `c_type` == "arithmetic", returns the command.
-        Does not support `c_type` of "return" 
+        Does not support `c_type` of "return"
         """
 
         if self.c_type == CType.RETURN:
@@ -77,9 +78,11 @@ class Command:
 
         if self.c_type == CType.ARITHMETIC:
             translation = ARITHMETIC_COMMANDS[self.arg1]
-            
+
             if self.arg1 in ("eq", "gt", "lt"):
-                self.translation = [line.format(Command.label_count) for line in translation]
+                self.translation = [
+                    line.format(Command.label_count) for line in translation
+                ]
                 Command.label_count += 1
             else:
                 self.translation = translation
