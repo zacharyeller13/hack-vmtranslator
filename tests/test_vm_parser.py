@@ -5,10 +5,16 @@ Test methods for vm_parser module
 import os
 from pytest import raises
 
-from vm_parser import parse_file, Command
+from vm_parser import Command, parse_commands, parse_file
 
 
 valid_parsed_file = ["push constant 17", "push local 2", "add", "pop argument 1"]
+valid_parsed_commands = [
+    Command("push constant 17"),
+    Command("push local 2"),
+    Command("add"),
+    Command("pop argument 1")
+]
 
 
 def test_parse_file_basic():
@@ -67,3 +73,7 @@ def test_command_arg1_return_raises_error():
 def test_command_arg2_return_raises_error():
     with raises(TypeError):
         Command("return").arg2()
+
+
+def test_parse_commands():
+    assert parse_commands(valid_parsed_file) == valid_parsed_commands
