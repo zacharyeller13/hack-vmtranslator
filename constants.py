@@ -6,6 +6,7 @@ COMMENT = "//"
 VAR_START = "@"
 
 # Base Address Pointers - may not be necessary but will keep til later
+# Additionally, Temp is RAM[5]-RAM[12] and static is RAM[16]-RAM[255]
 SP = 0
 LCL = 1
 ARG = 2
