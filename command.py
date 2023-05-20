@@ -38,7 +38,8 @@ class Command:
 
     def arg1(self) -> str:
         """
-        Returns the 1st argument to the command.  If `c_type` == "arithmetic", returns the command
+        Returns the 1st argument to the command.  If `c_type` == "arithmetic", returns the command.
+        Does not support `c_type` of "return" 
         """
 
         if self.c_type == "return":
@@ -50,7 +51,7 @@ class Command:
 
     def arg2(self) -> str:
         """
-        Returns the 2nd argument to the command.  Should only run if `c_type` is in:
+        Returns the 2nd argument to the command.  Raises an error if `c_type` is not one of:
             - push
             - pop
             - function
