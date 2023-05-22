@@ -140,3 +140,31 @@ class Command:
         # - temp
         # TODO: index
         # TODO: command push or pop
+
+    def _translate_pop(self):
+        """
+        Translate a command when its `CType` is pop. "Constant" memory segment 
+            does not have a pop method.
+
+        Example:
+            `pop local 1` ->
+            // pop local 1
+            @SP
+            AM=M-1
+            D=M
+            @LCL
+            A=M
+            A=A+1
+            M=D
+        """
+        
+        # TODO: segment
+        # - local
+        # - argument
+        # - this
+        # - that
+        # - static
+        # - pointer
+        # - temp
+        # TODO: index
+        # TODO: command push or pop
