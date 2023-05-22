@@ -83,13 +83,14 @@ def test_parse_commands():
 def test_translate_arithmetic_no_label():
     command = Command("add")
     command.translate()
-    assert command.translation == ["@SP", "AM=M-1", "D=M", "A=A-1", "M=D+M"]
+    assert command.translation == ["// add", "@SP", "AM=M-1", "D=M", "A=A-1", "M=D+M"]
 
 
 def test_translate_arithmetic_label():
     command = Command("eq")
     command.translate()
     assert command.translation == [
+        "// eq",
         "@SP",
         "AM=M-1",
         "D=M",
@@ -115,6 +116,7 @@ def test_translate_arithmetic_multiple_labels():
     Command.label_count = 5
     command.translate()
     assert command.translation == [
+        "// eq",
         "@SP",
         "AM=M-1",
         "D=M",
@@ -132,4 +134,18 @@ def test_translate_arithmetic_multiple_labels():
         "A=M-1",
         "M=-1",
         "(END_IF_EQ5)",
+    ]
+
+
+def test_translate_push_constant():
+    command = Command("push constant 17")
+    command.translate()
+    assert command.translation == [
+        "// push constant 17",
+        "@17",
+        "D=A",
+        "@SP",
+        "A=M",
+        "M=D",
+        "M=M+1",
     ]

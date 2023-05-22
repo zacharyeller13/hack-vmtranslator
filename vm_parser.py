@@ -5,7 +5,7 @@ Ignores all whitespace and comments
 """
 
 from command import Command
-from constants import COMMENT, VAR_START
+from constants import COMMENT
 
 
 def parse_file(file: str) -> list[str]:
