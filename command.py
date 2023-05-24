@@ -123,11 +123,12 @@ class Command:
             M=M+1
         """
 
-        # Implementation of `push/pop constant n`
+        # All push operations have arg2, so go ahead and assign to a local variable
+        index = self.arg2
+
+        # Implementation of `push constant n`
         if self.arg1 == "constant":
-            self.translation.extend(
-                [f"@{self.arg2}", "D=A", "@SP", "A=M", "M=D", "M=M+1"]
-            )
+            self.translation.extend([f"@{index}", "D=A", "@SP", "A=M", "M=D", "M=M+1"])
 
         # TODO: segment
         # - local
@@ -139,11 +140,10 @@ class Command:
         # - pointer
         # - temp
         # TODO: index
-        # TODO: command push or pop
 
     def _translate_pop(self):
         """
-        Translate a command when its `CType` is pop. "Constant" memory segment 
+        Translate a command when its `CType` is pop. "Constant" memory segment
             does not have a pop method.
 
         Example:
@@ -157,7 +157,7 @@ class Command:
             A=A+1
             M=D
         """
-        
+
         # TODO: segment
         # - local
         # - argument
