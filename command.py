@@ -89,6 +89,9 @@ class Command:
         elif self.c_type == CType.PUSH:
             self._translate_push()
             return
+        elif self.c_type == CType.POP:
+            self._translate_pop()
+            return
         else:
             raise NotImplementedError
 
@@ -123,11 +126,12 @@ class Command:
             M=M+1
         """
 
-        # All push operations have arg2, so go ahead and assign to a local variable
-        index = self.arg2
+        # All push operations have arg1 and arg2, so go ahead and assign to local variables
+        segment = self.arg1
+        index = int(self.arg2)
 
         # Implementation of `push constant n`
-        if self.arg1 == "constant":
+        if segment == "constant":
             self.translation.extend([f"@{index}", "D=A", "@SP", "A=M", "M=D", "M=M+1"])
 
         # TODO: segment
@@ -157,6 +161,17 @@ class Command:
             A=A+1
             M=D
         """
+
+        # Same as with push, all pop operations have arg1 and arg2; assign to local variables
+        segment = self.arg1
+        index = int(self.arg2)
+
+        # implementation of `pop local n`
+        if segment == "local":
+            moves = ["A=A+1"] * index
+            self.translation.extend(
+                ["@SP", "AM=M-1", "D=M", "@LCL", "A=M", *moves, "M=D"]
+            )
 
         # TODO: segment
         # - local
