@@ -134,6 +134,14 @@ class Command:
         if segment == "constant":
             self.translation.extend([f"@{index}", "D=A", "@SP", "A=M", "M=D", "M=M+1"])
 
+        # Implementation of `push local n`
+        # Push item at LCL[index] onto stack
+        elif segment == "local":
+            moves = ["A=A+1"] * index
+            self.translation.extend(
+                ["@LCL", "A=M", *moves, "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1"]
+            )
+
         # TODO: segment
         # - local
         # - argument
@@ -143,7 +151,6 @@ class Command:
         # - static
         # - pointer
         # - temp
-        # TODO: index
 
     def _translate_pop(self):
         """
@@ -167,19 +174,17 @@ class Command:
         index = int(self.arg2)
 
         # implementation of `pop local n`
+        # Pop last item from stock into LCL[index]
         if segment == "local":
             moves = ["A=A+1"] * index
             self.translation.extend(
                 ["@SP", "AM=M-1", "D=M", "@LCL", "A=M", *moves, "M=D"]
             )
 
-        # TODO: segment
-        # - local
+        # TODO: segments
         # - argument
         # - this
         # - that
         # - static
         # - pointer
         # - temp
-        # TODO: index
-        # TODO: command push or pop
