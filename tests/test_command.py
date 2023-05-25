@@ -160,6 +160,20 @@ def test_translate_pop_local_2():
     ]
 
 
+def test_translate_pop_local_0():
+    command = Command("pop local 0")
+    command.translate()
+    assert command.translation == [
+        "// pop local 0",
+        "@SP",
+        "AM=M-1",
+        "D=M",
+        "@LCL",
+        "A=M",
+        "M=D",
+    ]
+
+
 def test_translate_push_local_2():
     command = Command("push local 2")
     command.translate()

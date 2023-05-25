@@ -168,13 +168,15 @@ class Command:
         Example:
             `pop local 1` ->
             // pop local 1
+            @1
+            D=A
+            @LCL
+            D=D+M
             @SP
             AM=M-1
-            D=M
-            @LCL
-            A=M
-            A=A+1
-            M=D
+            D=D+M
+            A=D-M
+            M=D-A
         """
 
         # Same as with push, all pop operations have arg1 and arg2; assign to local variables
@@ -182,21 +184,24 @@ class Command:
         index = int(self.arg2)
 
         # implementation of `pop local n`
-        # Pop last item from stock into LCL[index]
+        # Pop last item from stack into LCL[index]
         if segment == "local":
-            self.translation.extend(
-                [
-                    f"@{index}",
-                    "D=A",
-                    "@LCL",
-                    "D=D+M",
-                    "@SP",
-                    "AM=M-1",
-                    "D=D+M",
-                    "A=D-M",
-                    "M=D-A",
-                ]
-            )
+            if index > 0:
+                self.translation.extend(
+                    [
+                        f"@{index}",
+                        "D=A",
+                        "@LCL",
+                        "D=D+M",
+                        "@SP",
+                        "AM=M-1",
+                        "D=D+M",
+                        "A=D-M",
+                        "M=D-A",
+                    ]
+                )
+            else:
+                self.translation.extend(["@SP", "AM=M-1", "D=M", "@LCL", "A=M", "M=D"])
 
         # TODO: segments
         # - argument
