@@ -131,13 +131,15 @@ def test_translate_pop_local():
     command.translate()
     assert command.translation == [
         "// pop local 1",
+        "@1",
+        "D=A",
+        "@LCL",
+        "D=D+M",
         "@SP",
         "AM=M-1",
-        "D=M",
-        "@LCL",
-        "A=M",
-        "A=A+1",
-        "M=D",
+        "D=D+M",
+        "A=D-M",
+        "M=D-A",
     ]
 
 
@@ -146,26 +148,27 @@ def test_translate_pop_local_2():
     command.translate()
     assert command.translation == [
         "// pop local 2",
+        "@2",
+        "D=A",
+        "@LCL",
+        "D=D+M",
         "@SP",
         "AM=M-1",
-        "D=M",
-        "@LCL",
-        "A=M",
-        "A=A+1",
-        "A=A+1",
-        "M=D",
+        "D=D+M",
+        "A=D-M",
+        "M=D-A",
     ]
 
 
-def test_translate_push_local_1():
+def test_translate_push_local_2():
     command = Command("push local 2")
     command.translate()
     assert command.translation == [
         "// push local 2",
+        "@2",
+        "D=A",
         "@LCL",
-        "A=M",
-        "A=A+1",
-        "A=A+1",
+        "A=D+M",
         "D=M",
         "@SP",
         "A=M",

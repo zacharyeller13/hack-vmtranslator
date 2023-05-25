@@ -137,17 +137,25 @@ class Command:
         # Implementation of `push local n`
         # Push item at LCL[index] onto stack
         elif segment == "local":
-            moves = ["A=A+1"] * index
             self.translation.extend(
-                ["@LCL", "A=M", *moves, "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1"]
+                [
+                    f"@{index}",
+                    "D=A",
+                    "@LCL",
+                    "A=D+M",
+                    "D=M",
+                    "@SP",
+                    "A=M",
+                    "M=D",
+                    "@SP",
+                    "M=M+1",
+                ]
             )
 
         # TODO: segment
-        # - local
         # - argument
         # - this
         # - that
-        # - constant
         # - static
         # - pointer
         # - temp
@@ -176,9 +184,18 @@ class Command:
         # implementation of `pop local n`
         # Pop last item from stock into LCL[index]
         if segment == "local":
-            moves = ["A=A+1"] * index
             self.translation.extend(
-                ["@SP", "AM=M-1", "D=M", "@LCL", "A=M", *moves, "M=D"]
+                [
+                    f"@{index}",
+                    "D=A",
+                    "@LCL",
+                    "D=D+M",
+                    "@SP",
+                    "AM=M-1",
+                    "D=D+M",
+                    "A=D-M",
+                    "M=D-A",
+                ]
             )
 
         # TODO: segments
