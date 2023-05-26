@@ -73,12 +73,15 @@ class Command:
 
         return self.command.split()[2]
 
-    def translate(self) -> None:
+    def translate(self, filename: str = "") -> None:
         """
         Translates a command from its VM code to its assembly code
 
         Start by appending the command itself as a comment, then use string formatting
             to append the current `label_count` to any labels/references to labels.
+
+        Args:
+            filename (str): The name of the vm file being translated
         """
 
         self.translation.append(f"{COMMENT} {self.command}")
@@ -87,19 +90,17 @@ class Command:
             self._translate_arithmetic()
             return
         elif self.c_type == CType.PUSH:
-            self._translate_push()
+            self._translate_push(filename)
             return
         elif self.c_type == CType.POP:
-            self._translate_pop()
+            self._translate_pop(filename)
             return
         else:
             raise NotImplementedError
 
-    def _translate_arithmetic(self):
+    def _translate_arithmetic(self) -> None:
         """
         Translate a command when its `CType` is arithmetic.
-
-
         """
 
         translation = ARITHMETIC_COMMANDS[self.arg1]
@@ -111,7 +112,7 @@ class Command:
         if self.arg1 in ("eq", "gt", "lt"):
             Command.label_count += 1
 
-    def _translate_push(self):
+    def _translate_push(self, filename: str) -> None:
         """
         Translate a command when its `CType` is push.
 
@@ -124,6 +125,9 @@ class Command:
             A=M
             M=D
             M=M+1
+
+        Args:
+            filename (str): Name of vm file being translated
         """
 
         # All push operations have arg1 and arg2, so go ahead and assign to local variables
@@ -182,10 +186,15 @@ class Command:
                     ["@THAT", "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1"]
                 )
 
-        # TODO: segment
-        # - static
+        # Implementation of `push static n`
+        # Push item at Foo.i onto the stack where Foo is the vm filename
+        # and i is the index
+        elif segment == "static":
+            self.translation.extend(
+                [f"@{filename}.{index}", "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1"]
+            )
 
-    def _translate_pop(self):
+    def _translate_pop(self, filename: str) -> None:
         """
         Translate a command when its `CType` is pop. "Constant" memory segment
             does not have a pop method.
@@ -202,6 +211,9 @@ class Command:
             D=D+M
             A=D-M
             M=D-A
+
+        Args:
+            filename (str): Name of vm file being translated
         """
 
         # Same as with push, all pop operations have arg1 and arg2; assign to local variables
@@ -255,5 +267,10 @@ class Command:
             else:
                 self.translation.extend(["@SP", "AM=M-1", "D=M", "@THAT", "M=D"])
 
-        # TODO: segments
-        # - static
+        # Implementation of `pop static n`
+        # Pop last item from stack into variable Foo.i
+        # where i is the index and Foo is the .vm filename
+        elif segment == "static":
+            self.translation.extend(
+                ["@SP", "AM=M-1", "D=M", f"@{filename}.{index}", "M=D"]
+            )

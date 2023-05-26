@@ -44,15 +44,15 @@ def test_command_push_arg2():
     assert Command("push constant 17").arg2 == "17"
 
 
-# Currently fails as arg1() does not account for other types besides arithmetic and push/pop
+# Currently fails as arg1 does not account for other types besides arithmetic and push/pop
 def test_command_arg1_return_raises_error():
     with raises(TypeError):
-        Command("return").arg1
+        _ = Command("return").arg1
 
 
 def test_command_arg2_return_raises_error():
     with raises(TypeError):
-        Command("return").arg2
+        _ = Command("return").arg2
 
 
 def test_translate_arithmetic_no_label():
@@ -248,6 +248,19 @@ def test_translate_pop_pointer_1():
     ]
 
 
+def test_translate_pop_static_1():
+    command = Command("pop static 1")
+    command.translate(filename="TestFile")
+    assert command.translation == [
+        "// pop static 1",
+        "@SP",
+        "AM=M-1",
+        "D=M",
+        "@TestFile.1",
+        "M=D"
+    ]
+
+
 def test_translate_push_local_2():
     command = Command("push local 2")
     command.translate()
@@ -323,6 +336,21 @@ def test_translate_push_pointer_1():
     assert command.translation == [
         "// push pointer 1",
         "@THAT",
+        "D=M",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+    ]
+
+
+def test_translate_push_static_1():
+    command = Command("push static 1")
+    command.translate(filename="TestFile")
+    assert command.translation == [
+        "// push static 1",
+        "@TestFile.1",
         "D=M",
         "@SP",
         "A=M",
