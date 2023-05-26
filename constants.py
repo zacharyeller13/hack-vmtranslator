@@ -33,6 +33,9 @@ ARG = 2
 THIS = 3
 THAT = 4
 
+# Segment Abbreviations
+SEGMENTS = {"local": "LCL", "argument": "ARG", "this": "THIS", "that": "THAT"}
+
 # Arithmetic/Logical Commands
 # Dictionary containing list of ASM instructions to complete each VM arithmetic/logic command
 # Labels like "(IF_EQ)" will get appended with a number later on when there is more than 1

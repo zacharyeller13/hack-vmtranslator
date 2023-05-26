@@ -4,7 +4,7 @@ Command module
 
 from typing import Self
 
-from constants import ARITHMETIC_COMMANDS, COMMENT, CType
+from constants import ARITHMETIC_COMMANDS, COMMENT, CType, SEGMENTS
 
 
 class Command:
@@ -134,14 +134,14 @@ class Command:
         if segment == "constant":
             self.translation.extend([f"@{index}", "D=A", "@SP", "A=M", "M=D", "M=M+1"])
 
-        # Implementation of `push local n`
-        # Push item at LCL[index] onto stack
-        elif segment == "local":
+        # Implementation of `push local/argument/this/that n`
+        # Push item at LCL[index]/ARG[index]/THIS[index]/THAT[index] onto stack
+        elif segment in SEGMENTS.keys():
             self.translation.extend(
                 [
                     f"@{index}",
                     "D=A",
-                    "@LCL",
+                    f"@{SEGMENTS[segment]}",
                     "A=D+M",
                     "D=M",
                     "@SP",
@@ -152,13 +152,27 @@ class Command:
                 ]
             )
 
+        # Implementation of `push temp n`
+        # Push item at RAM[5+index] onto stack
+        elif segment == "temp":
+            self.translation.extend(
+                [
+                    "@5",
+                    "D=A",
+                    f"@{index}",
+                    "A=D+A",
+                    "D=M",
+                    "@SP",
+                    "A=M",
+                    "M=D",
+                    "@SP",
+                    "M=M+1",
+                ]
+            )
+
         # TODO: segment
-        # - argument
-        # - this
-        # - that
         # - static
         # - pointer
-        # - temp
 
     def _translate_pop(self):
         """
@@ -183,15 +197,15 @@ class Command:
         segment = self.arg1
         index = int(self.arg2)
 
-        # implementation of `pop local n`
-        # Pop last item from stack into LCL[index]
-        if segment == "local":
+        # Implementation of `pop local/argument/this/that n`
+        # Pop last item from stack into LCL[index]/ARG[index]/THIS[index]/THAT[index]
+        if segment in SEGMENTS.keys():
             if index > 0:
                 self.translation.extend(
                     [
                         f"@{index}",
                         "D=A",
-                        "@LCL",
+                        f"@{SEGMENTS[segment]}",
                         "D=D+M",
                         "@SP",
                         "AM=M-1",
@@ -201,12 +215,27 @@ class Command:
                     ]
                 )
             else:
-                self.translation.extend(["@SP", "AM=M-1", "D=M", "@LCL", "A=M", "M=D"])
+                self.translation.extend(
+                    ["@SP", "AM=M-1", "D=M", f"@{SEGMENTS[segment]}", "A=M", "M=D"]
+                )
+
+        # Implementation of `pop temp n`
+        # Pop last item from stack into RAM[5+index]
+        elif segment == "temp":
+            self.translation.extend(
+                [
+                    f"@{index}",
+                    "D=A",
+                    "@5",
+                    "D=D+A",
+                    "@SP",
+                    "AM=M-1",
+                    "D=D+M",
+                    "A=D-M",
+                    "M=D-A",
+                ]
+            )
 
         # TODO: segments
-        # - argument
-        # - this
-        # - that
         # - static
         # - pointer
-        # - temp
