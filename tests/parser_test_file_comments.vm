@@ -1,0 +1,5 @@
+push constant 17
+push local 2 // This is an in-line comment
+add
+// This is a comment
+pop argument 1
