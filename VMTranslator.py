@@ -7,6 +7,8 @@ to comply with submission rules of the Nand2Tetris course.
 from argparse import ArgumentParser, Namespace
 import sys
 
+from vm_parser import parse_commands, parse_file
+
 
 def initialize_argparser() -> ArgumentParser:
     """
@@ -43,6 +45,13 @@ def initialize_arguments(arg_parser: ArgumentParser) -> Namespace:
 def main() -> None:
     args = initialize_argparser()
     file = initialize_arguments(args).file
+
+    lines = parse_file(file)
+    commands = parse_commands(lines)
+
+    # for command in commands:
+    #     command.translate()
+    #     print(command.translation)
 
 
 if __name__ == "__main__":
