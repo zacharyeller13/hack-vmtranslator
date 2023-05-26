@@ -170,9 +170,20 @@ class Command:
                 ]
             )
 
+        # Implementation of `push pointer 0/1`
+        # Push item at THIS or THAT onto stack
+        elif segment == "pointer":
+            if index == 0:
+                self.translation.extend(
+                    ["@THIS", "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1"]
+                )
+            else:
+                self.translation.extend(
+                    ["@THAT", "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1"]
+                )
+
         # TODO: segment
         # - static
-        # - pointer
 
     def _translate_pop(self):
         """
@@ -236,6 +247,13 @@ class Command:
                 ]
             )
 
+        # Implementation of `pop pointer 0/1`
+        # Pop last item from stack into THIS or THAT
+        elif segment == "pointer":
+            if index == 0:
+                self.translation.extend(["@SP", "AM=M-1", "D=M", "@THIS", "M=D"])
+            else:
+                self.translation.extend(["@SP", "AM=M-1", "D=M", "@THAT", "M=D"])
+
         # TODO: segments
         # - static
-        # - pointer

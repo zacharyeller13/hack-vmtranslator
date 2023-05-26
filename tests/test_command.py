@@ -222,6 +222,32 @@ def test_translate_pop_temp():
     ]
 
 
+def test_translate_pop_pointer_0():
+    command = Command("pop pointer 0")
+    command.translate()
+    assert command.translation == [
+        "// pop pointer 0",
+        "@SP",
+        "AM=M-1",
+        "D=M",
+        "@THIS",
+        "M=D"
+    ]
+
+
+def test_translate_pop_pointer_1():
+    command = Command("pop pointer 1")
+    command.translate()
+    assert command.translation == [
+        "// pop pointer 1",
+        "@SP",
+        "AM=M-1",
+        "D=M",
+        "@THAT",
+        "M=D"
+    ]
+
+
 def test_translate_push_local_2():
     command = Command("push local 2")
     command.translate()
@@ -267,6 +293,36 @@ def test_translate_push_temp():
         "D=A",
         "@2",
         "A=D+A",
+        "D=M",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+    ]
+
+
+def test_translate_push_pointer_0():
+    command = Command("push pointer 0")
+    command.translate()
+    assert command.translation == [
+        "// push pointer 0",
+        "@THIS",
+        "D=M",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+    ]
+
+
+def test_translate_push_pointer_1():
+    command = Command("push pointer 1")
+    command.translate()
+    assert command.translation == [
+        "// push pointer 1",
+        "@THAT",
         "D=M",
         "@SP",
         "A=M",
