@@ -7,6 +7,7 @@ to comply with submission rules of the Nand2Tetris course.
 from argparse import ArgumentParser, Namespace
 import sys
 
+from asm_writer import translate_commands, write_output_file
 from vm_parser import parse_commands, parse_file
 
 
@@ -49,9 +50,8 @@ def main() -> None:
     lines = parse_file(file)
     commands = parse_commands(lines)
 
-    # for command in commands:
-    #     command.translate()
-    #     print(command.translation)
+    translate_commands(commands)
+    write_output_file(file[:-3], commands)
 
 
 if __name__ == "__main__":
