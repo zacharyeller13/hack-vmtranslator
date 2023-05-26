@@ -47,13 +47,6 @@ def parse_commands(base_commands: list[str]) -> list[Command]:
 
     return [Command(command) for command in base_commands]
 
-
-# TODO: Arithemtic/Logic commands
-# add, sub, neg, eq, gt, lt, and, or, not
-
-# TODO: Memory access commands
-# pop, push
-
 # TODO: Branching Commands
 # label, goto, if-goto
 
