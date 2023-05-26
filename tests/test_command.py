@@ -122,6 +122,7 @@ def test_translate_push_constant():
         "@SP",
         "A=M",
         "M=D",
+        "@SP",
         "M=M+1",
     ]
 
