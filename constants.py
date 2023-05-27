@@ -102,5 +102,5 @@ ARITHMETIC_COMMANDS = {
     ],
     "and": ["@SP", "AM=M-1", "D=M", "A=A-1", "M=D&M"],
     "or": ["@SP", "AM=M-1", "D=M", "A=A-1", "M=D|M"],
-    "not": ["@SP", "AM=M-1", "M=!M"],
+    "not": ["@SP", "A=M-1", "M=!M"],
 }
