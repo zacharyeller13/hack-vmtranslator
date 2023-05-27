@@ -2,8 +2,6 @@
 Command module
 """
 
-from typing import Self
-
 from constants import ARITHMETIC_COMMANDS, COMMENT, CType, SEGMENTS
 
 
