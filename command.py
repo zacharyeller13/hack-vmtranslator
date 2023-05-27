@@ -36,7 +36,7 @@ class Command:
         self.c_type: str = self._set_type(command)
         self.translation: list[str] = []
 
-    def __eq__(self, other: Self) -> bool:
+    def __eq__(self, other) -> bool:
         return self.command == other.command and self.c_type == other.c_type
 
     def _set_type(self, command: str) -> str:
