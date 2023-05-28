@@ -2,6 +2,8 @@
 Module for functions to write all of the command translations out to file
 """
 
+from __future__ import annotations
+
 from command import Command
 
 

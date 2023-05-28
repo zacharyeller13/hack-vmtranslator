@@ -4,6 +4,8 @@ to those components.
 Ignores all whitespace and comments
 """
 
+from __future__ import annotations
+
 from command import Command
 from constants import COMMENT
 

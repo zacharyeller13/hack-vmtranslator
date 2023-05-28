@@ -2,7 +2,7 @@
 Constants for both VM language and ASM language
 """
 
-from enum import Enum, auto
+from enum import Enum
 
 
 COMMENT = "//"
@@ -14,15 +14,15 @@ class CType(Enum):
     Command type constants
     """
 
-    ARITHMETIC = auto()
-    PUSH = auto()
-    POP = auto()
-    LABEL = auto()
-    GOTO = auto()
-    IF = auto()
-    FUNCTION = auto()
-    RETURN = auto()
-    CALL = auto()
+    ARITHMETIC = "arithmetic"
+    PUSH = "push"
+    POP = "pop"
+    LABEL = "label"
+    GOTO = "goto"
+    IF = "if"
+    FUNCTION = "function"
+    RETURN = "return"
+    CALL = "call"
 
 
 # Base Address Pointers - may not be necessary but will keep til later

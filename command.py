@@ -2,6 +2,8 @@
 Command module
 """
 
+from __future__ import annotations
+
 from constants import ARITHMETIC_COMMANDS, COMMENT, CType, SEGMENTS
 
 
