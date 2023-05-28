@@ -2,14 +2,14 @@
 Constants for both VM language and ASM language
 """
 
-from enum import StrEnum, auto
+from enum import Enum, auto
 
 
 COMMENT = "//"
 VAR_START = "@"
 
 
-class CType(StrEnum):
+class CType(Enum):
     """
     Command type constants
     """
