@@ -232,7 +232,7 @@ def test_translate_pop_pointer_0():
         "AM=M-1",
         "D=M",
         "@THIS",
-        "M=D"
+        "M=D",
     ]
 
 
@@ -245,7 +245,7 @@ def test_translate_pop_pointer_1():
         "AM=M-1",
         "D=M",
         "@THAT",
-        "M=D"
+        "M=D",
     ]
 
 
@@ -258,7 +258,7 @@ def test_translate_pop_static_1():
         "AM=M-1",
         "D=M",
         "@TestFile.1",
-        "M=D"
+        "M=D",
     ]
 
 

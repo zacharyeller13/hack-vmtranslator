@@ -9,9 +9,12 @@ COMMENT = "//"
 VAR_START = "@"
 
 
-class CType(Enum):
+class CType(str, Enum):
     """
     Command type constants
+
+    Inherits from both str and Enum rather than the simple StrEnum as a workaround in Python3.8
+        which the course grader uses
     """
 
     ARITHMETIC = "arithmetic"

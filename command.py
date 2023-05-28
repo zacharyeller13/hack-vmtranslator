@@ -136,7 +136,9 @@ class Command:
 
         # Implementation of `push constant n`
         if segment == "constant":
-            self.translation.extend([f"@{index}", "D=A", "@SP", "A=M", "M=D", "@SP", "M=M+1"])
+            self.translation.extend(
+                [f"@{index}", "D=A", "@SP", "A=M", "M=D", "@SP", "M=M+1"]
+            )
 
         # Implementation of `push local/argument/this/that n`
         # Push item at LCL[index]/ARG[index]/THIS[index]/THAT[index] onto stack
