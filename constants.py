@@ -2,27 +2,30 @@
 Constants for both VM language and ASM language
 """
 
-from enum import StrEnum, auto
+from enum import Enum
 
 
 COMMENT = "//"
 VAR_START = "@"
 
 
-class CType(StrEnum):
+class CType(str, Enum):
     """
     Command type constants
+
+    Inherits from both str and Enum rather than the simple StrEnum as a workaround in Python3.8
+        which the course grader uses
     """
 
-    ARITHMETIC = auto()
-    PUSH = auto()
-    POP = auto()
-    LABEL = auto()
-    GOTO = auto()
-    IF = auto()
-    FUNCTION = auto()
-    RETURN = auto()
-    CALL = auto()
+    ARITHMETIC = "arithmetic"
+    PUSH = "push"
+    POP = "pop"
+    LABEL = "label"
+    GOTO = "goto"
+    IF = "if"
+    FUNCTION = "function"
+    RETURN = "return"
+    CALL = "call"
 
 
 # Base Address Pointers - may not be necessary but will keep til later

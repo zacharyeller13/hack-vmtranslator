@@ -2,7 +2,7 @@
 Command module
 """
 
-from typing import Self
+from __future__ import annotations
 
 from constants import ARITHMETIC_COMMANDS, COMMENT, CType, SEGMENTS
 
@@ -36,7 +36,7 @@ class Command:
         self.c_type: str = self._set_type(command)
         self.translation: list[str] = []
 
-    def __eq__(self, other: Self) -> bool:
+    def __eq__(self, other) -> bool:
         return self.command == other.command and self.c_type == other.c_type
 
     def _set_type(self, command: str) -> str:
@@ -136,7 +136,9 @@ class Command:
 
         # Implementation of `push constant n`
         if segment == "constant":
-            self.translation.extend([f"@{index}", "D=A", "@SP", "A=M", "M=D", "@SP", "M=M+1"])
+            self.translation.extend(
+                [f"@{index}", "D=A", "@SP", "A=M", "M=D", "@SP", "M=M+1"]
+            )
 
         # Implementation of `push local/argument/this/that n`
         # Push item at LCL[index]/ARG[index]/THIS[index]/THAT[index] onto stack
