@@ -4,7 +4,15 @@ Command module
 
 from __future__ import annotations
 
-from constants import ARITHMETIC_COMMANDS, COMMENT, CType, SEGMENTS
+from constants import (
+    ARITHMETIC_COMMANDS,
+    COMMENT,
+    CType,
+    IF_GOTO,
+    GOTO,
+    LABEL,
+    SEGMENTS,
+)
 
 
 class Command:
@@ -35,12 +43,13 @@ class Command:
         self.command: str = command
         self.c_type: str = self._set_type(command)
         self.translation: list[str] = []
+        self._current_function: str = ""
 
     def __eq__(self, other) -> bool:
         return self.command == other.command and self.c_type == other.c_type
 
     def _set_type(self, command: str) -> str:
-        if (command_start := command.split()[0]) not in (CType.POP, CType.PUSH):
+        if (command_start := command.split()[0]) in ARITHMETIC_COMMANDS.keys():
             return CType.ARITHMETIC
         return command_start
 
@@ -95,6 +104,15 @@ class Command:
         elif self.c_type == CType.POP:
             self._translate_pop(filename)
             return
+        elif self.c_type == CType.LABEL:
+            self._translate_label()
+            return
+        elif self.c_type == CType.GOTO:
+            self._translate_goto()
+            return
+        elif self.c_type == CType.IF:
+            self._translate_if_goto()
+            return
         else:
             raise NotImplementedError
 
@@ -124,6 +142,7 @@ class Command:
             @SP
             A=M
             M=D
+            @SP
             M=M+1
 
         Args:
@@ -276,3 +295,22 @@ class Command:
             self.translation.extend(
                 ["@SP", "AM=M-1", "D=M", f"@{filename}.{index}", "M=D"]
             )
+
+    def _translate_label(self) -> None:
+        """
+        Should be of form `(functionName$label)` for labels inside of a function.
+        Will be plain `(label)` otherwise
+        """
+
+        if self._current_function:
+            label = LABEL.format(f"{self._current_function}${self.arg1}")
+        else:
+            label = LABEL.format(self.arg1)
+
+        self.translation.append(label)
+
+    def _translate_goto(self) -> None:
+        self.translation.extend([line.format(self.arg1) for line in GOTO])
+
+    def _translate_if_goto(self) -> None:
+        self.translation.extend([line.format(self.arg1) for line in IF_GOTO])
