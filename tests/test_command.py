@@ -43,6 +43,10 @@ def test_command_type_IF():
     assert Command(valid_parsed_file[6]).c_type == CType.IF
 
 
+def test_command_type_FUNCTION():
+    assert Command("function SimpleFunc.test 0").c_type == CType.FUNCTION
+
+
 # Arg tests
 def test_command_arithmetic_arg1():
     assert Command("add").arg1 == "add"
@@ -436,3 +440,11 @@ def test_translate_if_goto():
         "@TEST_LABEL",
         "D;JNE",
     ]
+
+
+# Function commands translation
+def test_translate_function():
+    command = Command("function SimpleFunc.test 0")
+    command.translate()
+    assert command.translation == ["// function SimpleFunc.test 0", "(SimpleFunc.test)"]
+    assert command._current_function == "SimpleFunc.test"

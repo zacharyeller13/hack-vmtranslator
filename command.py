@@ -46,7 +46,7 @@ class Command:
         self._current_function: str = ""
 
     def __eq__(self, other) -> bool:
-        return self.command == other.command and self.c_type == other.c_type
+        return (self.command == other.command) and (self.c_type == other.c_type)
 
     def _set_type(self, command: str) -> str:
         if (command_start := command.split()[0]) in ARITHMETIC_COMMANDS.keys():
@@ -97,22 +97,22 @@ class Command:
 
         if self.c_type == CType.ARITHMETIC:
             self._translate_arithmetic()
-            return
         elif self.c_type == CType.PUSH:
             self._translate_push(filename)
-            return
         elif self.c_type == CType.POP:
             self._translate_pop(filename)
-            return
         elif self.c_type == CType.LABEL:
             self._translate_label()
-            return
         elif self.c_type == CType.GOTO:
             self._translate_goto()
-            return
         elif self.c_type == CType.IF:
             self._translate_if_goto()
-            return
+        elif self.c_type == CType.FUNCTION:
+            self._translate_function()
+        elif self.c_type == CType.CALL:
+            self._translate_call()
+        elif self.c_type == CType.RETURN:
+            self._translate_return()
         else:
             raise NotImplementedError
 
@@ -314,3 +314,16 @@ class Command:
 
     def _translate_if_goto(self) -> None:
         self.translation.extend([line.format(self.arg1) for line in IF_GOTO])
+
+    def _translate_function(self) -> None:
+        self.translation.append(LABEL.format(self.arg1))
+        self._current_function = self.arg1
+
+    def _translate_call(self) -> None:
+        raise NotImplementedError
+
+    def _translate_return(self) -> None:
+        raise NotImplementedError
+
+# TODO: Function commands
+# function, call, return

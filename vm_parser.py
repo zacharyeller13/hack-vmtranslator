@@ -48,9 +48,3 @@ def parse_commands(base_commands: list[str]) -> list[Command]:
     """
 
     return [Command(command) for command in base_commands]
-
-# TODO: Branching Commands
-# label, goto, if-goto
-
-# TODO: Function commands
-# function, call, return
