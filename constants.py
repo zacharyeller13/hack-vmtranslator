@@ -9,7 +9,7 @@ COMMENT = "//"
 VAR_START = "@"
 LABEL = "({})"
 GOTO = ["@{}", "0;JMP"]
-IF_GOTO = ["@SP", "AM=M-1", "D=M", "@{}", "D;JLT"]
+IF_GOTO = ["@SP", "AM=M-1", "D=M", "@{}", "D;JNE"]
 
 
 class CType(str, Enum):

@@ -418,6 +418,7 @@ def test_translate_label_in_function():
     command.translate()
     assert command.translation == ["// label TEST_LABEL", "(testFunction$TEST_LABEL)"]
 
+
 def test_translate_goto():
     command = Command("goto TEST_LABEL")
     command.translate()
@@ -427,4 +428,11 @@ def test_translate_goto():
 def test_translate_if_goto():
     command = Command("if-goto TEST_LABEL")
     command.translate()
-    assert command.translation == ["// if-goto TEST_LABEL", "@SP", "AM=M-1", "D=M", "@TEST_LABEL", "D;JLT"]
+    assert command.translation == [
+        "// if-goto TEST_LABEL",
+        "@SP",
+        "AM=M-1",
+        "D=M",
+        "@TEST_LABEL",
+        "D;JLT",
+    ]
