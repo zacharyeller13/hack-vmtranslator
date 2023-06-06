@@ -434,5 +434,5 @@ def test_translate_if_goto():
         "AM=M-1",
         "D=M",
         "@TEST_LABEL",
-        "D;JLT",
+        "D;JNE",
     ]
