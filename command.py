@@ -319,11 +319,84 @@ class Command:
         self.translation.append(LABEL.format(self.arg1))
         self._current_function = self.arg1
 
+        # If nVars is > 0, initialize all local variables to 0
+        # In other words, repeat self.arg2 times: push constant 0
+        if self.arg2 != '0':
+            self.translation.extend(
+                int(self.arg2) * ["@0", "D=A", "@SP", "A=M", "M=D", "@SP", "M=M+1"]
+            )
+
     def _translate_call(self) -> None:
-        raise NotImplementedError
+        n_args = int(self.arg2)
+        self.translation.extend(
+            [
+                # push the return address
+                f"@RETURN_ADDRESS{self.label_count}",
+                "D=A",
+                "@SP",
+                "A=M",
+                "M=D",
+                "@SP",
+                "M=M+1",
+                # push LCL
+                "@LCL",
+                "D=M",
+                "@SP",
+                "A=M",
+                "M=D",
+                "@SP",
+                "M=M+1",
+                # push ARG
+                "@ARG",
+                "D=M",
+                "@SP",
+                "A=M",
+                "M=D",
+                "@SP",
+                "M=M+1",
+                # push THIS
+                "@THIS",
+                "D=M",
+                "@SP",
+                "A=M",
+                "M=D",
+                "@SP",
+                "M=M+1",
+                # push THAT
+                "@THAT",
+                "D=M",
+                "@SP",
+                "A=M",
+                "M=D",
+                "@SP",
+                "M=M+1",
+                # Set ARG = SP - n - 5
+                "@SP",
+                "D=M",
+                f"@{5 + n_args}",
+                "D=D-A",
+                "@ARG",
+                "M=D",
+                # Set LCL = SP
+                "@SP",
+                "D=M",
+                "@LCL",
+                "M=D",
+            ]
+        )
+
+        # goto function
+        self._translate_goto()
+
+        # (return-address) - declare the return-address label; this does not happen on the stack,
+        # this happens in the assembly code so we return just below where we 'goto' the function.
+        # Use the current label count to make them unique
+        self.translation.append(LABEL.format(f"RETURN_ADDRESS{self.label_count}"))
+        self.label_count += 1
 
     def _translate_return(self) -> None:
         raise NotImplementedError
 
+
 # TODO: Function commands
-# function, call, return
+# return

@@ -448,3 +448,98 @@ def test_translate_function():
     command.translate()
     assert command.translation == ["// function SimpleFunc.test 0", "(SimpleFunc.test)"]
     assert command._current_function == "SimpleFunc.test"
+
+
+def test_translate_function_nVars():
+    command = Command("function SimpleFunc.test 3")
+    command.translate()
+    assert command.translation == [
+        "// function SimpleFunc.test 3",
+        "(SimpleFunc.test)",
+        "@0",
+        "D=A",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        "@0",
+        "D=A",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        "@0",
+        "D=A",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+    ]
+
+
+def test_translate_function_call():
+    command = Command("call SimpleFunc.test 2")
+    command.label_count = 2
+    command.translate()
+    assert command.translation == [
+        "// call SimpleFunc.test 2",
+        # push the return address
+        "@RETURN_ADDRESS2",
+        "D=A",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        # push LCL
+        "@LCL",
+        "D=M",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        # push ARG
+        "@ARG",
+        "D=M",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        # push THIS
+        "@THIS",
+        "D=M",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        # push THAT
+        "@THAT",
+        "D=M",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        # Set ARG = SP - n - 5
+        "@SP",
+        "D=M",
+        "@7",  # 2 + 5
+        "D=D-A",
+        "@ARG",
+        "M=D",
+        # Set LCL = SP
+        "@SP",
+        "D=M",
+        "@LCL",
+        "M=D",
+        # goto function
+        "@SimpleFunc.test",
+        "0;JMP",
+        "(RETURN_ADDRESS2)"
+    ]
