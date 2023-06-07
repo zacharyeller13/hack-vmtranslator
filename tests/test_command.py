@@ -450,7 +450,7 @@ def test_translate_function():
     assert command._current_function == "SimpleFunc.test"
 
 
-def test_translate_function_nVars():
+def test_translate_function_n_vars():
     command = Command("function SimpleFunc.test 3")
     command.translate()
     assert command.translation == [
