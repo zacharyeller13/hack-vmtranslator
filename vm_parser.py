@@ -34,6 +34,22 @@ def parse_file(file: str) -> list[str]:
         return lines
 
 
+def parse_directory(directory: str) -> list[str]:
+    """
+    Read in all files from a directory and return a list of the .vm files
+    to be parsed
+
+    Args:
+        `directory` (str): The filepath to the directory to be parsed
+
+    Returns:
+        list[str]: All vm files in the directory
+    """
+    raise NotImplementedError
+    # TODO: list all files in directory
+    # keep only .vm files
+    # return list of .vm files
+
 def parse_commands(base_commands: list[str]) -> list[Command]:
     """
     Parse list of commands in string representation into a list of Command objects

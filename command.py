@@ -453,7 +453,3 @@ class Command:
                 "0;JMP",
             ]
         )
-
-
-# TODO: Function commands
-# return

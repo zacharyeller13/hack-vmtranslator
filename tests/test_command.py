@@ -541,12 +541,12 @@ def test_translate_function_call():
         # goto function
         "@SimpleFunc.test",
         "0;JMP",
-        "(RETURN_ADDRESS2)"
+        "(RETURN_ADDRESS2)",
     ]
 
 
 def test_translate_function_return():
-    command = Command('return')
+    command = Command("return")
     command.translate()
     assert command.translation == [
         "// return",
@@ -557,7 +557,7 @@ def test_translate_function_return():
         "@5",
         "D=D-A",
         "@R13",
-        "M=D", # D register is now free to use
+        "M=D",  # D register is now free to use
         # *ARG = pop()
         "@SP",
         "AM=M-1",
@@ -603,5 +603,5 @@ def test_translate_function_return():
         "@R13",
         "A=M",
         "A=M",
-        "0;JMP"
+        "0;JMP",
     ]
