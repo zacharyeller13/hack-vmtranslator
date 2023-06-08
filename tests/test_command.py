@@ -543,3 +543,68 @@ def test_translate_function_call():
         "0;JMP",
         "(RETURN_ADDRESS2)"
     ]
+
+
+def test_translate_function_return():
+    command = Command('return')
+    command.translate()
+    assert command.translation == [
+        "// return",
+        # endFrame
+        "@LCL",
+        "D=M",
+        # retAddr = endFrame - 5
+        "@5",
+        "D=D-A",
+        "@R13",
+        "M=D", # D register is now free to use
+        # *ARG = pop()
+        "@SP",
+        "AM=M-1",
+        "D=M",
+        "@ARG",
+        "A=M",
+        "M=D",
+        # SP = ARG + 1
+        "@ARG",
+        "D=M+1",
+        "@SP",
+        "M=D",
+        # restore THAT
+        "@R13",
+        "D=M+1",
+        "@3",
+        "A=D+A",
+        "D=M",
+        "@THAT",
+        "M=D",
+        # restore THIS
+        "@R13",
+        "D=M+1",
+        "@2",
+        "A=D+A",
+        "D=M",
+        "@THIS",
+        "M=D",
+        # restore ARG
+        "@R13",
+        "D=M+1",
+        "@2",
+        "A=D+A",
+        "D=M",
+        "@ARG",
+        "M=D",
+        # restore LCL
+        "@R13",
+        "D=M+1",
+        "@2",
+        "A=D+A",
+        "D=M",
+        "@LCL",
+        "M=D",
+        # goto retAddr
+        "@R13",
+        "A=M",
+        "A=M",
+        "0;JMP"
+    ]
