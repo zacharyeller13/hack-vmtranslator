@@ -5,6 +5,7 @@ Ignores all whitespace and comments
 """
 
 from __future__ import annotations
+from glob import glob
 
 from command import Command
 from constants import COMMENT
@@ -34,6 +35,21 @@ def parse_file(file: str) -> list[str]:
         return lines
 
 
+def parse_directory(directory: str) -> list[str]:
+    """
+    Read in all files from a directory and return a list of the .vm files
+    to be parsed
+
+    Args:
+        `directory` (str): The filepath to the directory to be parsed
+
+    Returns:
+        list[str]: All vm files in the directory
+    """
+
+    vm_files = glob(f'{directory}*.vm')
+    return vm_files
+
 def parse_commands(base_commands: list[str]) -> list[Command]:
     """
     Parse list of commands in string representation into a list of Command objects
@@ -48,9 +64,3 @@ def parse_commands(base_commands: list[str]) -> list[Command]:
     """
 
     return [Command(command) for command in base_commands]
-
-# TODO: Branching Commands
-# label, goto, if-goto
-
-# TODO: Function commands
-# function, call, return

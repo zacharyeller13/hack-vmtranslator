@@ -4,7 +4,15 @@ Command module
 
 from __future__ import annotations
 
-from constants import ARITHMETIC_COMMANDS, COMMENT, CType, SEGMENTS
+from constants import (
+    ARITHMETIC_COMMANDS,
+    COMMENT,
+    CType,
+    IF_GOTO,
+    GOTO,
+    LABEL,
+    SEGMENTS,
+)
 
 
 class Command:
@@ -35,12 +43,13 @@ class Command:
         self.command: str = command
         self.c_type: str = self._set_type(command)
         self.translation: list[str] = []
+        self._current_function: str = ""
 
     def __eq__(self, other) -> bool:
-        return self.command == other.command and self.c_type == other.c_type
+        return (self.command == other.command) and (self.c_type == other.c_type)
 
     def _set_type(self, command: str) -> str:
-        if (command_start := command.split()[0]) not in (CType.POP, CType.PUSH):
+        if (command_start := command.split()[0]) in ARITHMETIC_COMMANDS.keys():
             return CType.ARITHMETIC
         return command_start
 
@@ -88,13 +97,22 @@ class Command:
 
         if self.c_type == CType.ARITHMETIC:
             self._translate_arithmetic()
-            return
         elif self.c_type == CType.PUSH:
             self._translate_push(filename)
-            return
         elif self.c_type == CType.POP:
             self._translate_pop(filename)
-            return
+        elif self.c_type == CType.LABEL:
+            self._translate_label()
+        elif self.c_type == CType.GOTO:
+            self._translate_goto()
+        elif self.c_type == CType.IF:
+            self._translate_if_goto()
+        elif self.c_type == CType.FUNCTION:
+            self._translate_function()
+        elif self.c_type == CType.CALL:
+            self._translate_call()
+        elif self.c_type == CType.RETURN:
+            self._translate_return()
         else:
             raise NotImplementedError
 
@@ -124,6 +142,7 @@ class Command:
             @SP
             A=M
             M=D
+            @SP
             M=M+1
 
         Args:
@@ -276,3 +295,161 @@ class Command:
             self.translation.extend(
                 ["@SP", "AM=M-1", "D=M", f"@{filename}.{index}", "M=D"]
             )
+
+    def _translate_label(self) -> None:
+        """
+        Should be of form `(functionName$label)` for labels inside of a function.
+        Will be plain `(label)` otherwise
+        """
+
+        if self._current_function:
+            label = LABEL.format(f"{self._current_function}${self.arg1}")
+        else:
+            label = LABEL.format(self.arg1)
+
+        self.translation.append(label)
+
+    def _translate_goto(self) -> None:
+        self.translation.extend([line.format(self.arg1) for line in GOTO])
+
+    def _translate_if_goto(self) -> None:
+        self.translation.extend([line.format(self.arg1) for line in IF_GOTO])
+
+    def _translate_function(self) -> None:
+        self.translation.append(LABEL.format(self.arg1))
+        self._current_function = self.arg1
+
+        # If nVars is > 0, initialize all local variables to 0
+        # In other words, repeat self.arg2 times: push constant 0
+        if self.arg2 != "0":
+            self.translation.extend(
+                int(self.arg2) * ["@0", "D=A", "@SP", "A=M", "M=D", "@SP", "M=M+1"]
+            )
+
+    def _translate_call(self) -> None:
+        n_args = int(self.arg2)
+        self.translation.extend(
+            [
+                # push the return address
+                f"@RETURN_ADDRESS{self.label_count}",
+                "D=A",
+                "@SP",
+                "A=M",
+                "M=D",
+                "@SP",
+                "M=M+1",
+                # push LCL
+                "@LCL",
+                "D=M",
+                "@SP",
+                "A=M",
+                "M=D",
+                "@SP",
+                "M=M+1",
+                # push ARG
+                "@ARG",
+                "D=M",
+                "@SP",
+                "A=M",
+                "M=D",
+                "@SP",
+                "M=M+1",
+                # push THIS
+                "@THIS",
+                "D=M",
+                "@SP",
+                "A=M",
+                "M=D",
+                "@SP",
+                "M=M+1",
+                # push THAT
+                "@THAT",
+                "D=M",
+                "@SP",
+                "A=M",
+                "M=D",
+                "@SP",
+                "M=M+1",
+                # Set ARG = SP - n - 5
+                "@SP",
+                "D=M",
+                f"@{5 + n_args}",
+                "D=D-A",
+                "@ARG",
+                "M=D",
+                # Set LCL = SP
+                "@SP",
+                "D=M",
+                "@LCL",
+                "M=D",
+            ]
+        )
+
+        # goto function
+        self._translate_goto()
+
+        # (return-address) - declare the return-address label; this does not happen on the stack,
+        # this happens in the assembly code so we return just below where we 'goto' the function.
+        # Use the current label count to make them unique
+        self.translation.append(LABEL.format(f"RETURN_ADDRESS{self.label_count}"))
+        self.label_count += 1
+
+    def _translate_return(self) -> None:
+        self.translation.extend(
+            [
+                # endFrame
+                "@LCL",
+                "D=M",
+                # retAddr = endFrame - 5
+                "@5",
+                "D=D-A",
+                "@R13",
+                "M=D",  # D register is now free to use
+                # *ARG = pop()
+                "@SP",
+                "AM=M-1",
+                "D=M",
+                "@ARG",
+                "A=M",
+                "M=D",
+                # SP = ARG + 1
+                "@ARG",
+                "D=M+1",
+                "@SP",
+                "M=D",
+                # restore THAT
+                "@R13",
+                "D=M+1",
+                "@3",
+                "A=D+A",
+                "D=M",
+                "@THAT",
+                "M=D",
+                # restore THIS
+                "@R13",
+                "D=M+1",
+                "@2",
+                "A=D+A",
+                "D=M",
+                "@THIS",
+                "M=D",
+                # restore ARG
+                "@R13",
+                "A=M+1",
+                "A=A+1",
+                "D=M",
+                "@ARG",
+                "M=D",
+                # restore LCL
+                "@R13",
+                "A=M+1",
+                "D=M",
+                "@LCL",
+                "M=D",
+                # goto retAddr
+                "@R13",
+                "A=M",
+                "A=M",
+                "0;JMP",
+            ]
+        )
