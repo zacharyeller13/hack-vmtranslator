@@ -5,6 +5,7 @@ Ignores all whitespace and comments
 """
 
 from __future__ import annotations
+from glob import glob
 
 from command import Command
 from constants import COMMENT
@@ -45,10 +46,9 @@ def parse_directory(directory: str) -> list[str]:
     Returns:
         list[str]: All vm files in the directory
     """
-    raise NotImplementedError
-    # TODO: list all files in directory
-    # keep only .vm files
-    # return list of .vm files
+
+    vm_files = glob(f'{directory}*.vm')
+    return vm_files
 
 def parse_commands(base_commands: list[str]) -> list[Command]:
     """
