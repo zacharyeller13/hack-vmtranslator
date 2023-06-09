@@ -24,7 +24,8 @@ def write_output_file(in_filename: str, commands: list[Command]) -> None:
     Write an output file with the same name as the `in_filename` but with the .asm filetype
 
     Args:
-        `in_filename` (str): The filename (without extension) of the file being translated
+        `in_filename` (str): The filename (without extension) of the file being translated.
+            Or the directory name which will be the out_file name
         `commands` (list[Command]): The list of Commands being translated and written
             to the .asm file
     """
