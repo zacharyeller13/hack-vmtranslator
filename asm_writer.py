@@ -5,6 +5,28 @@ Module for functions to write all of the command translations out to file
 from __future__ import annotations
 
 from command import Command
+from constants import SYS_INIT
+
+
+def write_init(directory: str) -> None:
+    """
+    Write bootstrap code that initializes the VM via .asm code.
+
+    Args:
+        `directory` (str): The directory being translated that will be the written filename
+
+    Returns:
+        list[list[str]]: A list of the initialization commands
+    """
+
+    sys_init = Command("call Sys.init 0")
+    sys_init.translate()
+    print(sys_init.translation)
+    sys_init_commands = SYS_INIT + sys_init.translation
+    print(sys_init_commands)
+
+    with open(f"{directory}.asm", "w", encoding="UTF-8") as out_file:
+        out_file.write("\n".join(sys_init_commands) + "\n")
 
 
 def translate_commands(commands: list[Command]) -> None:
@@ -19,7 +41,7 @@ def translate_commands(commands: list[Command]) -> None:
         command.translate()
 
 
-def write_output_file(in_filename: str, commands: list[Command]) -> None:
+def write_translated_asm(in_filename: str, commands: list[Command]) -> None:
     """
     Write an output file with the same name as the `in_filename` but with the .asm filetype
 
@@ -30,6 +52,6 @@ def write_output_file(in_filename: str, commands: list[Command]) -> None:
             to the .asm file
     """
 
-    with open(f"{in_filename}.asm", "w", encoding="UTF-8") as out_file:
+    with open(f"{in_filename}.asm", "a", encoding="UTF-8") as out_file:
         for command in commands:
             out_file.write("\n".join(command.translation) + "\n")

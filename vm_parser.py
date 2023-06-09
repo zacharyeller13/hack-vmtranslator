@@ -47,8 +47,9 @@ def parse_directory(directory: str) -> list[str]:
         list[str]: All vm files in the directory
     """
 
-    vm_files = glob(f'{directory}*.vm')
+    vm_files = glob(f"{directory}/*.vm")
     return vm_files
+
 
 def parse_commands(base_commands: list[str]) -> list[Command]:
     """

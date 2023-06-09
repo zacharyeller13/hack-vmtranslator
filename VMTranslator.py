@@ -5,10 +5,11 @@ to comply with submission rules of the Nand2Tetris course.
 """
 
 from argparse import ArgumentParser, Namespace
+import os
 import sys
 
-from asm_writer import translate_commands, write_output_file
-from vm_parser import parse_commands, parse_file
+from asm_writer import translate_commands, write_init, write_translated_asm
+from vm_parser import parse_commands, parse_directory, parse_file
 
 
 def initialize_argparser() -> ArgumentParser:
@@ -17,13 +18,14 @@ def initialize_argparser() -> ArgumentParser:
     """
 
     arg_parser = ArgumentParser(
-        prog="VMTranslator", description="Translate .vm file into Hack assembly code."
+        prog="VMTranslator",
+        description="Translate .vm file(s) into Hack assembly code.",
     )
     arg_parser.add_argument(
-        "file",
-        metavar="file.vm",
+        "file_or_dir",
+        metavar="file.vm or /dirname/",
         type=str,
-        help="absolute filepath of the .vm file to be translated",
+        help="absolute filepath of the .vm file or directory to be translated",
     )
 
     return arg_parser
@@ -36,7 +38,9 @@ def initialize_arguments(arg_parser: ArgumentParser) -> Namespace:
 
     arg_namespace = arg_parser.parse_args()
 
-    if arg_namespace.file[-3:] != ".vm":
+    if arg_namespace.file_or_dir[-3:] != ".vm" and not os.path.isdir(
+        arg_namespace.file_or_dir
+    ):
         arg_parser.print_usage()
         sys.exit()
 
@@ -45,13 +49,23 @@ def initialize_arguments(arg_parser: ArgumentParser) -> Namespace:
 
 def main() -> None:
     args = initialize_argparser()
-    file = initialize_arguments(args).file
+    file_or_dir = initialize_arguments(args).file_or_dir
 
-    lines = parse_file(file)
-    commands = parse_commands(lines)
+    if os.path.isdir(file_or_dir):
+        out_file_name = f"{file_or_dir}/{os.path.basename(file_or_dir)}"
+        write_init(out_file_name)
+        files = parse_directory(file_or_dir)
+        commands = []
+        for file in files:
+            lines = parse_file(file)
+            commands.extend(parse_commands(lines))
+    else:
+        out_file_name = file_or_dir
+        lines = parse_file(file_or_dir)
+        commands = parse_commands(lines)
 
     translate_commands(commands)
-    write_output_file(file[:-3], commands)
+    write_translated_asm(out_file_name, commands)
 
 
 if __name__ == "__main__":
