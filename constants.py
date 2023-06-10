@@ -7,6 +7,10 @@ from enum import Enum
 
 COMMENT = "//"
 VAR_START = "@"
+LABEL = "({})"
+GOTO = ["@{}", "0;JMP"]
+IF_GOTO = ["@SP", "AM=M-1", "D=M", "@{}", "D;JNE"]
+SYS_INIT = ["@256", "D=A", "@SP", "M=D", "@5", "D=A", "@SP", "M=M+D", "@Sys.init", "0;JMP"]
 
 
 class CType(str, Enum):
@@ -22,7 +26,7 @@ class CType(str, Enum):
     POP = "pop"
     LABEL = "label"
     GOTO = "goto"
-    IF = "if"
+    IF = "if-goto"
     FUNCTION = "function"
     RETURN = "return"
     CALL = "call"

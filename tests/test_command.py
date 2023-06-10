@@ -7,27 +7,47 @@ from pytest import raises
 from command import Command
 from constants import CType
 
-valid_parsed_file = ["push constant 17", "push local 2", "add", "pop argument 1"]
-valid_parsed_commands = [
-    Command("push constant 17"),
-    Command("push local 2"),
-    Command("add"),
-    Command("pop argument 1"),
+valid_parsed_file = [
+    "push constant 17",
+    "push local 2",
+    "add",
+    "pop argument 1",
+    "label TEST_LABEL",
+    "goto TEST_LABEL",
+    "if-goto TEST_LABEL",
 ]
 
 
+# Command type tests
 def test_command_type_push():
     assert Command(valid_parsed_file[0]).c_type == CType.PUSH
-
-
-def test_command_type_pop():
-    assert Command(valid_parsed_file[-1]).c_type == CType.POP
 
 
 def test_command_type_arithmetic():
     assert Command(valid_parsed_file[2]).c_type == CType.ARITHMETIC
 
 
+def test_command_type_pop():
+    assert Command(valid_parsed_file[3]).c_type == CType.POP
+
+
+def test_command_type_label():
+    assert Command(valid_parsed_file[4]).c_type == CType.LABEL
+
+
+def test_command_type_GOTO():
+    assert Command(valid_parsed_file[5]).c_type == CType.GOTO
+
+
+def test_command_type_IF():
+    assert Command(valid_parsed_file[6]).c_type == CType.IF
+
+
+def test_command_type_FUNCTION():
+    assert Command("function SimpleFunc.test 0").c_type == CType.FUNCTION
+
+
+# Arg tests
 def test_command_arithmetic_arg1():
     assert Command("add").arg1 == "add"
 
@@ -44,7 +64,18 @@ def test_command_push_arg2():
     assert Command("push constant 17").arg2 == "17"
 
 
-# Currently fails as arg1 does not account for other types besides arithmetic and push/pop
+def test_command_label_arg1():
+    assert Command("label TEST_LABEL").arg1 == "TEST_LABEL"
+
+
+def test_command_goto_arg1():
+    assert Command("goto TEST_LABEL").arg1 == "TEST_LABEL"
+
+
+def test_command_if_goto_arg1():
+    assert Command("if-goto TEST_LABEL").arg1 == "TEST_LABEL"
+
+
 def test_command_arg1_return_raises_error():
     with raises(TypeError):
         _ = Command("return").arg1
@@ -55,6 +86,22 @@ def test_command_arg2_return_raises_error():
         _ = Command("return").arg2
 
 
+def test_command_arg2_label_raises_error():
+    with raises(TypeError):
+        _ = Command("label TEST_LABEL").arg2
+
+
+def test_command_arg2_goto_raises_error():
+    with raises(TypeError):
+        _ = Command("goto TEST_LABEL").arg2
+
+
+def test_command_arg2_if_goto_raises_error():
+    with raises(TypeError):
+        _ = Command("if-goto TEST_LABEL").arg2
+
+
+# Arithmetic translation command tests
 def test_translate_arithmetic_no_label():
     command = Command("add")
     command.translate()
@@ -112,6 +159,7 @@ def test_translate_arithmetic_multiple_labels():
     ]
 
 
+# Push/Pop translation command tests
 def test_translate_push_constant():
     command = Command("push constant 17")
     command.translate()
@@ -250,8 +298,8 @@ def test_translate_pop_pointer_1():
 
 
 def test_translate_pop_static_1():
-    command = Command("pop static 1")
-    command.translate(filename="TestFile")
+    command = Command("pop static 1", filename="TestFile")
+    command.translate()
     assert command.translation == [
         "// pop static 1",
         "@SP",
@@ -347,8 +395,8 @@ def test_translate_push_pointer_1():
 
 
 def test_translate_push_static_1():
-    command = Command("push static 1")
-    command.translate(filename="TestFile")
+    command = Command("push static 1", filename="TestFile")
+    command.translate()
     assert command.translation == [
         "// push static 1",
         "@TestFile.1",
@@ -358,4 +406,207 @@ def test_translate_push_static_1():
         "M=D",
         "@SP",
         "M=M+1",
+    ]
+
+
+# Branch commands translation
+def test_translate_label():
+    command = Command("label TEST_LABEL")
+    command.translate()
+    assert command.translation == ["// label TEST_LABEL", "(TEST_LABEL)"]
+
+
+def test_translate_label_in_function():
+    command = Command("label TEST_LABEL")
+    command._current_function = "testFunction"
+    command.translate()
+    assert command.translation == ["// label TEST_LABEL", "(testFunction$TEST_LABEL)"]
+
+
+def test_translate_goto():
+    command = Command("goto TEST_LABEL")
+    command.translate()
+    assert command.translation == ["// goto TEST_LABEL", "@TEST_LABEL", "0;JMP"]
+
+
+def test_translate_if_goto():
+    command = Command("if-goto TEST_LABEL")
+    command.translate()
+    assert command.translation == [
+        "// if-goto TEST_LABEL",
+        "@SP",
+        "AM=M-1",
+        "D=M",
+        "@TEST_LABEL",
+        "D;JNE",
+    ]
+
+
+# Function commands translation
+def test_translate_function():
+    command = Command("function SimpleFunc.test 0")
+    command.translate()
+    assert command.translation == ["// function SimpleFunc.test 0", "(SimpleFunc.test)"]
+    assert command._current_function == "SimpleFunc.test"
+
+
+def test_translate_function_n_vars():
+    command = Command("function SimpleFunc.test 3")
+    command.translate()
+    assert command.translation == [
+        "// function SimpleFunc.test 3",
+        "(SimpleFunc.test)",
+        "@0",
+        "D=A",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        "@0",
+        "D=A",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        "@0",
+        "D=A",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+    ]
+
+
+def test_translate_function_call():
+    command = Command("call SimpleFunc.test 2")
+    Command.label_count = 2
+    command.translate()
+    assert command.translation == [
+        "// call SimpleFunc.test 2",
+        # push the return address
+        "@SimpleFunc.test$ret.2",
+        "D=A",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        # push LCL
+        "@LCL",
+        "D=M",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        # push ARG
+        "@ARG",
+        "D=M",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        # push THIS
+        "@THIS",
+        "D=M",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        # push THAT
+        "@THAT",
+        "D=M",
+        "@SP",
+        "A=M",
+        "M=D",
+        "@SP",
+        "M=M+1",
+        # Set ARG = SP - n - 5
+        "@SP",
+        "D=M",
+        "@7",  # 2 + 5
+        "D=D-A",
+        "@ARG",
+        "M=D",
+        # Set LCL = SP
+        "@SP",
+        "D=M",
+        "@LCL",
+        "M=D",
+        # goto function
+        "@SimpleFunc.test",
+        "0;JMP",
+        "(SimpleFunc.test$ret.2)",
+    ]
+
+
+def test_translate_function_return():
+    command = Command("return")
+    command.translate()
+    assert command.translation == [
+        "// return",
+        # endFrame
+        "@LCL",
+        "D=M",
+        "@R13",
+        "M=D",
+        # retAddr = endFrame - 5
+        "@5",
+        "D=D-A",
+        "A=D",
+        "D=M",
+        "@R14",
+        "M=D",  # R13=endFrame; R14=retAddr
+        # *ARG = pop()
+        "@SP",
+        "AM=M-1",
+        "D=M",
+        "@ARG",
+        "A=M",
+        "M=D",
+        # SP = ARG + 1
+        "@ARG",
+        "D=M+1",
+        "@SP",
+        "M=D",
+        # restore THAT
+        "@R13",
+        "D=M-1",
+        "A=D",
+        "D=M",
+        "@THAT",
+        "M=D",
+        # restore THIS
+        "@R13",
+        "D=M",
+        "@2",
+        "A=D-A",
+        "D=M",
+        "@THIS",
+        "M=D",
+        # restore ARG
+        "@R13",
+        "D=M",
+        "@3",
+        "A=D-A",
+        "D=M",
+        "@ARG",
+        "M=D",
+        # restore LCL
+        "@R13",
+        "D=M",
+        "@4",
+        "A=D-A",
+        "D=M",
+        "@LCL",
+        "M=D",
+        # goto retAddr
+        "@R14",
+        "A=M",
+        "0;JMP",
     ]

@@ -4,7 +4,15 @@ Command module
 
 from __future__ import annotations
 
-from constants import ARITHMETIC_COMMANDS, COMMENT, CType, SEGMENTS
+from constants import (
+    ARITHMETIC_COMMANDS,
+    COMMENT,
+    CType,
+    IF_GOTO,
+    GOTO,
+    LABEL,
+    SEGMENTS,
+)
 
 
 class Command:
@@ -15,6 +23,7 @@ class Command:
         `label_count` (int): class attribute that counts number of commands used with labels.
             To help create unique labels for each command.
         `command` (str): the full command
+        `filename` (str): the filename this particular command is in
         `c_type` (CType): the type of the command.  Is one of:
             - arithmetic
             - push
@@ -31,16 +40,18 @@ class Command:
 
     label_count: int = 0
 
-    def __init__(self, command: str) -> None:
+    def __init__(self, command: str, filename: str = "") -> None:
         self.command: str = command
         self.c_type: str = self._set_type(command)
+        self.filename: str = filename
         self.translation: list[str] = []
+        self._current_function: str = ""
 
     def __eq__(self, other) -> bool:
-        return self.command == other.command and self.c_type == other.c_type
+        return (self.command == other.command) and (self.c_type == other.c_type)
 
     def _set_type(self, command: str) -> str:
-        if (command_start := command.split()[0]) not in (CType.POP, CType.PUSH):
+        if (command_start := command.split()[0]) in ARITHMETIC_COMMANDS.keys():
             return CType.ARITHMETIC
         return command_start
 
@@ -73,28 +84,34 @@ class Command:
 
         return self.command.split()[2]
 
-    def translate(self, filename: str = "") -> None:
+    def translate(self) -> None:
         """
         Translates a command from its VM code to its assembly code
 
         Start by appending the command itself as a comment, then use string formatting
             to append the current `label_count` to any labels/references to labels.
-
-        Args:
-            filename (str): The name of the vm file being translated
         """
 
         self.translation.append(f"{COMMENT} {self.command}")
 
         if self.c_type == CType.ARITHMETIC:
             self._translate_arithmetic()
-            return
         elif self.c_type == CType.PUSH:
-            self._translate_push(filename)
-            return
+            self._translate_push()
         elif self.c_type == CType.POP:
-            self._translate_pop(filename)
-            return
+            self._translate_pop()
+        elif self.c_type == CType.LABEL:
+            self._translate_label()
+        elif self.c_type == CType.GOTO:
+            self._translate_goto()
+        elif self.c_type == CType.IF:
+            self._translate_if_goto()
+        elif self.c_type == CType.FUNCTION:
+            self._translate_function()
+        elif self.c_type == CType.CALL:
+            self._translate_call()
+        elif self.c_type == CType.RETURN:
+            self._translate_return()
         else:
             raise NotImplementedError
 
@@ -112,7 +129,7 @@ class Command:
         if self.arg1 in ("eq", "gt", "lt"):
             Command.label_count += 1
 
-    def _translate_push(self, filename: str) -> None:
+    def _translate_push(self) -> None:
         """
         Translate a command when its `CType` is push.
 
@@ -124,10 +141,8 @@ class Command:
             @SP
             A=M
             M=D
+            @SP
             M=M+1
-
-        Args:
-            filename (str): Name of vm file being translated
         """
 
         # All push operations have arg1 and arg2, so go ahead and assign to local variables
@@ -193,10 +208,18 @@ class Command:
         # and i is the index
         elif segment == "static":
             self.translation.extend(
-                [f"@{filename}.{index}", "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1"]
+                [
+                    f"@{self.filename}.{index}",
+                    "D=M",
+                    "@SP",
+                    "A=M",
+                    "M=D",
+                    "@SP",
+                    "M=M+1",
+                ]
             )
 
-    def _translate_pop(self, filename: str) -> None:
+    def _translate_pop(self) -> None:
         """
         Translate a command when its `CType` is pop. "Constant" memory segment
             does not have a pop method.
@@ -213,9 +236,6 @@ class Command:
             D=D+M
             A=D-M
             M=D-A
-
-        Args:
-            filename (str): Name of vm file being translated
         """
 
         # Same as with push, all pop operations have arg1 and arg2; assign to local variables
@@ -274,5 +294,171 @@ class Command:
         # where i is the index and Foo is the .vm filename
         elif segment == "static":
             self.translation.extend(
-                ["@SP", "AM=M-1", "D=M", f"@{filename}.{index}", "M=D"]
+                ["@SP", "AM=M-1", "D=M", f"@{self.filename}.{index}", "M=D"]
             )
+
+    def _translate_label(self) -> None:
+        """
+        Should be of form `(functionName$label)` for labels inside of a function.
+        Will be plain `(label)` otherwise
+        """
+
+        if self._current_function:
+            label = LABEL.format(f"{self._current_function}${self.arg1}")
+        else:
+            label = LABEL.format(self.arg1)
+
+        self.translation.append(label)
+
+    def _translate_goto(self) -> None:
+        self.translation.extend([line.format(self.arg1) for line in GOTO])
+
+    def _translate_if_goto(self) -> None:
+        self.translation.extend([line.format(self.arg1) for line in IF_GOTO])
+
+    def _translate_function(self) -> None:
+        self.translation.append(LABEL.format(self.arg1))
+        self._current_function = self.arg1
+
+        # If nVars is > 0, initialize all local variables to 0
+        # In other words, repeat self.arg2 times: push constant 0
+        if self.arg2 != "0":
+            self.translation.extend(
+                int(self.arg2) * ["@0", "D=A", "@SP", "A=M", "M=D", "@SP", "M=M+1"]
+            )
+
+    def _translate_call(self) -> None:
+        self._current_function = self.arg1
+        n_args = int(self.arg2)
+        self.translation.extend(
+            [
+                # push the return address
+                f"@{self._current_function}$ret.{Command.label_count}",
+                "D=A",
+                "@SP",
+                "A=M",
+                "M=D",
+                "@SP",
+                "M=M+1",
+                # push LCL
+                "@LCL",
+                "D=M",
+                "@SP",
+                "A=M",
+                "M=D",
+                "@SP",
+                "M=M+1",
+                # push ARG
+                "@ARG",
+                "D=M",
+                "@SP",
+                "A=M",
+                "M=D",
+                "@SP",
+                "M=M+1",
+                # push THIS
+                "@THIS",
+                "D=M",
+                "@SP",
+                "A=M",
+                "M=D",
+                "@SP",
+                "M=M+1",
+                # push THAT
+                "@THAT",
+                "D=M",
+                "@SP",
+                "A=M",
+                "M=D",
+                "@SP",
+                "M=M+1",
+                # Set ARG = SP - n - 5
+                "@SP",
+                "D=M",
+                f"@{5 + n_args}",
+                "D=D-A",
+                "@ARG",
+                "M=D",
+                # Set LCL = SP
+                "@SP",
+                "D=M",
+                "@LCL",
+                "M=D",
+            ]
+        )
+
+        # goto function
+        self._translate_goto()
+
+        # (return-address) - declare the return-address label; this does not happen on the stack,
+        # this happens in the assembly code so we return just below where we 'goto' the function.
+        # Use the current label count to make them unique
+        self.translation.append(
+            LABEL.format(f"{self._current_function}$ret.{Command.label_count}")
+        )
+        Command.label_count += 1
+
+    def _translate_return(self) -> None:
+        self.translation.extend(
+            [
+                # endFrame
+                "@LCL",
+                "D=M",
+                "@R13",
+                "M=D",
+                # retAddr = endFrame - 5
+                "@5",
+                "D=D-A",
+                "A=D",
+                "D=M",
+                "@R14",
+                "M=D",  # R13=endFrame; R14=retAddr
+                # *ARG = pop()
+                "@SP",
+                "AM=M-1",
+                "D=M",
+                "@ARG",
+                "A=M",
+                "M=D",
+                # SP = ARG + 1
+                "@ARG",
+                "D=M+1",
+                "@SP",
+                "M=D",
+                # restore THAT
+                "@R13",
+                "D=M-1",
+                "A=D",
+                "D=M",
+                "@THAT",
+                "M=D",
+                # restore THIS
+                "@R13",
+                "D=M",
+                "@2",
+                "A=D-A",
+                "D=M",
+                "@THIS",
+                "M=D",
+                # restore ARG
+                "@R13",
+                "D=M",
+                "@3",
+                "A=D-A",
+                "D=M",
+                "@ARG",
+                "M=D",
+                # restore LCL
+                "@R13",
+                "D=M",
+                "@4",
+                "A=D-A",
+                "D=M",
+                "@LCL",
+                "M=D",
+                # goto retAddr
+                "@R14",
+                "A=M",
+                "0;JMP",
+            ]
+        )
