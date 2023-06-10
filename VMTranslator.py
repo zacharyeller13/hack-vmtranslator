@@ -60,7 +60,7 @@ def main() -> None:
             lines = parse_file(file)
             commands.extend(parse_commands(lines, os.path.basename(file)))
     else:
-        out_file_name = file_or_dir
+        out_file_name = file_or_dir[:-3]
         lines = parse_file(file_or_dir)
         commands = parse_commands(lines, os.path.basename(file_or_dir))
 
