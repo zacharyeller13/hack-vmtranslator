@@ -21,9 +21,7 @@ def write_init(directory: str) -> None:
 
     sys_init = Command("call Sys.init 0")
     sys_init.translate()
-    print(sys_init.translation)
-    sys_init_commands = SYS_INIT + sys_init.translation
-    print(sys_init_commands)
+    sys_init_commands = SYS_INIT #+ sys_init.translation
 
     with open(f"{directory}.asm", "w", encoding="UTF-8") as out_file:
         out_file.write("\n".join(sys_init_commands) + "\n")

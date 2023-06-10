@@ -58,11 +58,11 @@ def main() -> None:
         commands = []
         for file in files:
             lines = parse_file(file)
-            commands.extend(parse_commands(lines))
+            commands.extend(parse_commands(lines, os.path.basename(file)))
     else:
         out_file_name = file_or_dir
         lines = parse_file(file_or_dir)
-        commands = parse_commands(lines)
+        commands = parse_commands(lines, os.path.basename(file_or_dir))
 
     translate_commands(commands)
     write_translated_asm(out_file_name, commands)
