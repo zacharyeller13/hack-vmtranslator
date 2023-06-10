@@ -23,6 +23,7 @@ class Command:
         `label_count` (int): class attribute that counts number of commands used with labels.
             To help create unique labels for each command.
         `command` (str): the full command
+        `filename` (str): the filename this particular command is in
         `c_type` (CType): the type of the command.  Is one of:
             - arithmetic
             - push
@@ -39,9 +40,10 @@ class Command:
 
     label_count: int = 0
 
-    def __init__(self, command: str) -> None:
+    def __init__(self, command: str, filename: str = "") -> None:
         self.command: str = command
         self.c_type: str = self._set_type(command)
+        self.filename: str = filename
         self.translation: list[str] = []
         self._current_function: str = ""
 
@@ -82,15 +84,12 @@ class Command:
 
         return self.command.split()[2]
 
-    def translate(self, filename: str = "") -> None:
+    def translate(self) -> None:
         """
         Translates a command from its VM code to its assembly code
 
         Start by appending the command itself as a comment, then use string formatting
             to append the current `label_count` to any labels/references to labels.
-
-        Args:
-            filename (str): The name of the vm file being translated
         """
 
         self.translation.append(f"{COMMENT} {self.command}")
@@ -98,9 +97,9 @@ class Command:
         if self.c_type == CType.ARITHMETIC:
             self._translate_arithmetic()
         elif self.c_type == CType.PUSH:
-            self._translate_push(filename)
+            self._translate_push()
         elif self.c_type == CType.POP:
-            self._translate_pop(filename)
+            self._translate_pop()
         elif self.c_type == CType.LABEL:
             self._translate_label()
         elif self.c_type == CType.GOTO:
@@ -130,7 +129,7 @@ class Command:
         if self.arg1 in ("eq", "gt", "lt"):
             Command.label_count += 1
 
-    def _translate_push(self, filename: str) -> None:
+    def _translate_push(self) -> None:
         """
         Translate a command when its `CType` is push.
 
@@ -144,9 +143,6 @@ class Command:
             M=D
             @SP
             M=M+1
-
-        Args:
-            filename (str): Name of vm file being translated
         """
 
         # All push operations have arg1 and arg2, so go ahead and assign to local variables
@@ -212,10 +208,18 @@ class Command:
         # and i is the index
         elif segment == "static":
             self.translation.extend(
-                [f"@{filename}.{index}", "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1"]
+                [
+                    f"@{self.filename}.{index}",
+                    "D=M",
+                    "@SP",
+                    "A=M",
+                    "M=D",
+                    "@SP",
+                    "M=M+1",
+                ]
             )
 
-    def _translate_pop(self, filename: str) -> None:
+    def _translate_pop(self) -> None:
         """
         Translate a command when its `CType` is pop. "Constant" memory segment
             does not have a pop method.
@@ -232,9 +236,6 @@ class Command:
             D=D+M
             A=D-M
             M=D-A
-
-        Args:
-            filename (str): Name of vm file being translated
         """
 
         # Same as with push, all pop operations have arg1 and arg2; assign to local variables
@@ -293,7 +294,7 @@ class Command:
         # where i is the index and Foo is the .vm filename
         elif segment == "static":
             self.translation.extend(
-                ["@SP", "AM=M-1", "D=M", f"@{filename}.{index}", "M=D"]
+                ["@SP", "AM=M-1", "D=M", f"@{self.filename}.{index}", "M=D"]
             )
 
     def _translate_label(self) -> None:
@@ -327,11 +328,12 @@ class Command:
             )
 
     def _translate_call(self) -> None:
+        self._current_function = self.arg1
         n_args = int(self.arg2)
         self.translation.extend(
             [
                 # push the return address
-                f"@RETURN_ADDRESS{self.label_count}",
+                f"@{self._current_function}$ret.{Command.label_count}",
                 "D=A",
                 "@SP",
                 "A=M",
@@ -391,8 +393,10 @@ class Command:
         # (return-address) - declare the return-address label; this does not happen on the stack,
         # this happens in the assembly code so we return just below where we 'goto' the function.
         # Use the current label count to make them unique
-        self.translation.append(LABEL.format(f"RETURN_ADDRESS{self.label_count}"))
-        self.label_count += 1
+        self.translation.append(
+            LABEL.format(f"{self._current_function}$ret.{Command.label_count}")
+        )
+        Command.label_count += 1
 
     def _translate_return(self) -> None:
         self.translation.extend(
@@ -400,11 +404,15 @@ class Command:
                 # endFrame
                 "@LCL",
                 "D=M",
+                "@R13",
+                "M=D",
                 # retAddr = endFrame - 5
                 "@5",
                 "D=D-A",
-                "@R13",
-                "M=D",  # D register is now free to use
+                "A=D",
+                "D=M",
+                "@R14",
+                "M=D",  # R13=endFrame; R14=retAddr
                 # *ARG = pop()
                 "@SP",
                 "AM=M-1",
@@ -419,36 +427,37 @@ class Command:
                 "M=D",
                 # restore THAT
                 "@R13",
-                "D=M+1",
-                "@3",
-                "A=D+A",
+                "D=M-1",
+                "A=D",
                 "D=M",
                 "@THAT",
                 "M=D",
                 # restore THIS
                 "@R13",
-                "D=M+1",
+                "D=M",
                 "@2",
-                "A=D+A",
+                "A=D-A",
                 "D=M",
                 "@THIS",
                 "M=D",
                 # restore ARG
                 "@R13",
-                "A=M+1",
-                "A=A+1",
+                "D=M",
+                "@3",
+                "A=D-A",
                 "D=M",
                 "@ARG",
                 "M=D",
                 # restore LCL
                 "@R13",
-                "A=M+1",
+                "D=M",
+                "@4",
+                "A=D-A",
                 "D=M",
                 "@LCL",
                 "M=D",
                 # goto retAddr
-                "@R13",
-                "A=M",
+                "@R14",
                 "A=M",
                 "0;JMP",
             ]

@@ -47,20 +47,22 @@ def parse_directory(directory: str) -> list[str]:
         list[str]: All vm files in the directory
     """
 
-    vm_files = glob(f'{directory}*.vm')
+    vm_files = glob(f"{directory}/*.vm")
     return vm_files
 
-def parse_commands(base_commands: list[str]) -> list[Command]:
+
+def parse_commands(base_commands: list[str], filename: str) -> list[Command]:
     """
     Parse list of commands in string representation into a list of Command objects
     with component parts
 
     Args:
         `base_commands` (list[str]): The list of string commands
+        `filename` (str): File of the current commands
 
     Returns:
         list[Command]: The same list of commands, but parsed into Command objects with
             necessary fields
     """
 
-    return [Command(command) for command in base_commands]
+    return [Command(command, filename) for command in base_commands]

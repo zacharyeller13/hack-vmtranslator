@@ -36,4 +36,4 @@ def test_parse_file_comments():
 
 
 def test_parse_commands():
-    assert parse_commands(valid_parsed_file) == valid_parsed_commands
+    assert parse_commands(valid_parsed_file, filename="") == valid_parsed_commands

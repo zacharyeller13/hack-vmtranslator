@@ -298,8 +298,8 @@ def test_translate_pop_pointer_1():
 
 
 def test_translate_pop_static_1():
-    command = Command("pop static 1")
-    command.translate(filename="TestFile")
+    command = Command("pop static 1", filename="TestFile")
+    command.translate()
     assert command.translation == [
         "// pop static 1",
         "@SP",
@@ -395,8 +395,8 @@ def test_translate_push_pointer_1():
 
 
 def test_translate_push_static_1():
-    command = Command("push static 1")
-    command.translate(filename="TestFile")
+    command = Command("push static 1", filename="TestFile")
+    command.translate()
     assert command.translation == [
         "// push static 1",
         "@TestFile.1",
@@ -482,12 +482,12 @@ def test_translate_function_n_vars():
 
 def test_translate_function_call():
     command = Command("call SimpleFunc.test 2")
-    command.label_count = 2
+    Command.label_count = 2
     command.translate()
     assert command.translation == [
         "// call SimpleFunc.test 2",
         # push the return address
-        "@RETURN_ADDRESS2",
+        "@SimpleFunc.test$ret.2",
         "D=A",
         "@SP",
         "A=M",
@@ -541,7 +541,7 @@ def test_translate_function_call():
         # goto function
         "@SimpleFunc.test",
         "0;JMP",
-        "(RETURN_ADDRESS2)",
+        "(SimpleFunc.test$ret.2)",
     ]
 
 
@@ -553,11 +553,15 @@ def test_translate_function_return():
         # endFrame
         "@LCL",
         "D=M",
+        "@R13",
+        "M=D",
         # retAddr = endFrame - 5
         "@5",
         "D=D-A",
-        "@R13",
-        "M=D",  # D register is now free to use
+        "A=D",
+        "D=M",
+        "@R14",
+        "M=D",  # R13=endFrame; R14=retAddr
         # *ARG = pop()
         "@SP",
         "AM=M-1",
@@ -572,36 +576,37 @@ def test_translate_function_return():
         "M=D",
         # restore THAT
         "@R13",
-        "D=M+1",
-        "@3",
-        "A=D+A",
+        "D=M-1",
+        "A=D",
         "D=M",
         "@THAT",
         "M=D",
         # restore THIS
         "@R13",
-        "D=M+1",
+        "D=M",
         "@2",
-        "A=D+A",
+        "A=D-A",
         "D=M",
         "@THIS",
         "M=D",
         # restore ARG
         "@R13",
-        "A=M+1",
-        "A=A+1",
+        "D=M",
+        "@3",
+        "A=D-A",
         "D=M",
         "@ARG",
         "M=D",
         # restore LCL
         "@R13",
-        "A=M+1",
+        "D=M",
+        "@4",
+        "A=D-A",
         "D=M",
         "@LCL",
         "M=D",
         # goto retAddr
-        "@R13",
-        "A=M",
+        "@R14",
         "A=M",
         "0;JMP",
     ]

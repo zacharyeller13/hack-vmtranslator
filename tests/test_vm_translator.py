@@ -13,19 +13,19 @@ def test_initialize_arguments():
     mock_filepath = "C:/File/Path.vm"
 
     monkeypatch.setattr(
-        "argparse.ArgumentParser.parse_args", lambda _: Namespace(file=mock_filepath)
+        "argparse.ArgumentParser.parse_args", lambda _: Namespace(file_or_dir=mock_filepath)
     )
 
     args = initialize_arguments(arg_parser)
 
-    assert args.file == mock_filepath
+    assert args.file_or_dir == mock_filepath
 
 
 def test_initialize_arguments_invalid_file():
-    mock_filepath = "C:/File/Path"
+    mock_filepath = "C:/File/Path.asm"
 
     monkeypatch.setattr(
-        "argparse.ArgumentParser.parse_args", lambda _: Namespace(file=mock_filepath)
+        "argparse.ArgumentParser.parse_args", lambda _: Namespace(file_or_dir=mock_filepath)
     )
 
     with raises(SystemExit):
